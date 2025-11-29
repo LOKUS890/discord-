@@ -1,10 +1,15 @@
-# ... (Código anterior) ...
+# Usa la imagen base de Python 3.10
+FROM python:3.10-slim
+
+# Establece el directorio de trabajo
 WORKDIR /app
-# 
-# CAMBIA ESTA LÍNEA:
-# COPY requirements.txt .  
-#
-# POR ESTA LÍNEA:
-COPY ./requirements.txt . # <-- Usamos ruta relativa a la raíz para forzar la lectura.
+
+# Copia el archivo de requisitos e instálalos
+COPY requirements.txt . 
 RUN pip install --no-cache-dir -r requirements.txt
-# ... (Código posterior) ...
+
+# Copia el resto del código (incluyendo bot.py)
+COPY . .
+
+# Comando de inicio
+CMD ["python", "bot.py"]
