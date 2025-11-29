@@ -1,6 +1,10 @@
-FROM python:3.10-slim
+# ... (Código anterior) ...
 WORKDIR /app
-COPY requirements.txt .  
+# 
+# CAMBIA ESTA LÍNEA:
+# COPY requirements.txt .  
+#
+# POR ESTA LÍNEA:
+COPY ./requirements.txt . # <-- Usamos ruta relativa a la raíz para forzar la lectura.
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-CMD ["python", "bot.py"]
+# ... (Código posterior) ...
