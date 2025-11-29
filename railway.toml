@@ -1,6 +1,8 @@
 [build]
+# FORZAMOS A RAILWAY A USAR LA IMAGEN BASE DE PYTHON
+builder = "nixpacks"
 buildCommand = "pip install -r requirements.txt" 
-nixpacksBuildImage = "python:3.10" # <--- ¡AÑADE ESTA LÍNEA!
+nixpacksBuildImage = "python:3.10" # <--- Versión de Python
 
 [deploy]
 startCommand = "python bot.py"
