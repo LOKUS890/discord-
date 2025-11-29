@@ -1,5 +1,6 @@
 [build]
 buildCommand = "pip install -r requirements.txt" 
+nixpacksBuildImage = "python:3.10" # <--- ¡AÑADE ESTA LÍNEA!
 
 [deploy]
 startCommand = "python bot.py"
