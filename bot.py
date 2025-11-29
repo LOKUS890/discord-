@@ -12,7 +12,7 @@ import os
 intents = discord.Intents.default()
 intents.members = True 
 intents.message_content = True 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 
 # -----------------------------------------------------------------------
 # --- 2. CLASES DE MODALS Y VISTAS (BOTONES) ----------------------------
@@ -294,4 +294,5 @@ else:
         print("✅ Token cargado con éxito. Iniciando bot...")
         bot.run(TOKEN)
     except Exception as e:
+
         print(f"❌ ERROR al iniciar el bot: {e}")
