@@ -75,6 +75,58 @@ class TicketModal(Modal, title="Abrir Nuevo Ticket de Soporte"):
             color=discord.Color.yellow()
         )
         
-        await ticket_channel.send(content=f"¡
+        await ticket_channel.send(content=f"¡Nuevo Ticket de {user.mention}!", embed=embed_gestion, view=GestionTicketView(ticket_opener=user))
+        await interaction.response.send_message(f"Ticket creado en {ticket_channel.mention}", ephemeral=True)
 
+class TicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None) 
 
+    @discord.ui.button(label="🎫 Crear Ticket", style=discord.ButtonStyle.blurple, custom_id="persistent:ticket_button")
+    async def ticket_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_modal(TicketModal())
+
+class GestionTicketView(View):
+    def __init__(self, ticket_opener):
+        super().__init__(timeout=None)
+        self.ticket_opener = ticket_opener
+        
+    @discord.ui.button(label="✅ Aprobar", style=discord.ButtonStyle.green, custom_id="ticket_aprobado")
+    async def aprobar_button(self, interaction: discord.Interaction, button: Button):
+        rol_verificado = discord.utils.get(interaction.guild.roles, name="Verificado")
+        if rol_verificado and self.ticket_opener:
+            await self.ticket_opener.add_roles(rol_verificado)
+            await interaction.response.send_message(f"Usuario verificado. Cerrando...", ephemeral=True)
+            await asyncio.sleep(5)
+            await interaction.channel.delete()
+
+    @discord.ui.button(label="🔒 Cerrar", style=discord.ButtonStyle.secondary, custom_id="ticket_cerrar")
+    async def cerrar_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_message("Cerrando canal...", ephemeral=True)
+        await asyncio.sleep(3)
+        await interaction.channel.delete()
+
+# --- 4. EVENTOS Y COMANDOS ---
+
+@bot.event
+async def on_ready():
+    print(f'🤖 Bot conectado como: {bot.user.name}')
+    bot.add_view(TicketView())
+    print('✅ Sistema de tickets activado.')
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def enviarticket(ctx):
+    embed = discord.Embed(title="Soporte", description="Haz clic abajo para abrir un ticket", color=discord.Color.blue())
+    await ctx.send(embed=embed, view=TicketView())
+
+# --- 5. EJECUCIÓN ---
+
+if __name__ == "__main__":
+    load_dotenv()
+    keep_alive() # Esto arranca Flask para Koyeb
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    if TOKEN:
+        bot.run(TOKEN)
+    else:
+        print("❌ ERROR: No hay TOKEN.")
