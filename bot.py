@@ -24,7 +24,7 @@ def keep_alive():
     t = Thread(target=run_web_server)
     t.start()
 
-# --- 2. CONFIGURACIÓN DEL BOT Y INTENTS ---
+# --- 2. CONFIGURACIÓN DEL SERVIDOR DE DISCORD ---
 intents = discord.Intents.default()
 intents.members = True 
 intents.message_content = True 
@@ -130,3 +130,32 @@ class GestionTicketView(View):
         await interaction.channel.delete()
 
 # --- 4. EVENTOS Y COMANDOS ---
+
+@bot.event
+async def on_ready():
+    print(f'🤖 Bot conectado como: {bot.user.name}')
+    # Registramos la vista para que el botón de 'Crear Ticket' funcione siempre
+    bot.add_view(TicketView())
+    print('✅ Sistema de tickets y botones persistentes cargados.')
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def enviarticket(ctx):
+    embed = discord.Embed(
+        title="Sistema de Soporte 🎫", 
+        description="Presiona el botón para abrir un ticket de verificación.", 
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed, view=TicketView())
+
+# --- 5. EJECUCIÓN ---
+
+if __name__ == "__main__":
+    load_dotenv()
+    keep_alive() # Inicia el servidor Flask para Koyeb
+    
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    if TOKEN:
+        bot.run(TOKEN)
+    else:
+        print("❌ ERROR: No se encontró DISCORD_TOKEN.")
