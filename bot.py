@@ -13,7 +13,7 @@ from threading import Thread   # <--- NUEVO
 # --- CONFIGURACIÓN DEL SERVIDOR WEB (PARA KOYEB) ---
 app = Flask('')
 
-@app.get('!')
+@app.get('/')
 def home():
     return "¡Bot vivo y funcionando 24/7!"
 
@@ -31,7 +31,7 @@ def keep_alive():
 intents = discord.Intents.default()
 intents.members = True 
 intents.message_content = True 
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 # ... (Aquí va todo tu código de Clases, Modals y Eventos que ya tenías) ...
 # (He omitido el bloque central para que la respuesta no sea eterna, pero manténlo igual)
@@ -54,6 +54,7 @@ else:
         bot.run(TOKEN)
     except Exception as e:
         print(f"❌ ERROR al iniciar el bot: {e}")
+
 
 
 
