@@ -13,7 +13,7 @@ from threading import Thread   # <--- NUEVO
 # --- CONFIGURACIÓN DEL SERVIDOR WEB (PARA KOYEB) ---
 app = Flask('')
 
-@app.get('.')
+@app.get('#')
 def home():
     return "¡Bot vivo y funcionando 24/7!"
 
@@ -54,4 +54,5 @@ else:
         bot.run(TOKEN)
     except Exception as e:
         print(f"❌ ERROR al iniciar el bot: {e}")
+
 
