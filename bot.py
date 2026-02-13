@@ -1,4 +1,3 @@
-# VERSION 4.0 - CON RESPUESTA DE USUARIO Y 3 BOTONES
 import discord
 from discord.ext import commands
 from discord.ui import View, Modal, TextInput 
@@ -9,13 +8,15 @@ from flask import Flask
 from threading import Thread
 from motor.motor_asyncio import AsyncIOMotorClient
 
+# --- SUPERVIVENCIA KOYEB ---
 app = Flask('')
 @app.get('/')
-def home(): return "Bot Online - V4"
+def home(): return "Bot Online - Protección Activa"
 
 def keep_alive():
     Thread(target=lambda: app.run(host='0.0.0.0', port=int(os.getenv("PORT", 8080)))).start()
 
+# --- CONEXIÓN BASE DE DATOS ---
 MONGO_URI = os.getenv("MONGODB_URI")
 cluster = AsyncIOMotorClient(MONGO_URI)
 db = cluster["servidor_data"]
@@ -26,39 +27,41 @@ intents.members = True
 intents.message_content = True 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# --- PANEL DE GESTIÓN (BOTONES) ---
+# --- PANEL DE GESTIÓN (LOS 3 BOTONES CON PROTECCIÓN) ---
 class GestionTicketView(View):
     def __init__(self, opener):
         super().__init__(timeout=None)
-        self.opener = opener
+        self.opener = opener # Guardamos al usuario que creó el ticket
 
-    @discord.ui.button(label="Aprobar", style=discord.ButtonStyle.green, custom_id="apr_v4", emoji="✅")
+    @discord.ui.button(label="Aprobar", style=discord.ButtonStyle.green, custom_id="apr_final", emoji="✅")
     async def ap(self, it, b):
+        # SI EL USUARIO QUE PULSA ES EL MISMO QUE CREÓ EL TICKET, SE CANCELA
+        if it.user.id == self.opener.id:
+            return await it.response.send_message("❌ No puedes aprobar tu propia solicitud.", ephemeral=True)
+        
         rol = discord.utils.get(it.guild.roles, name="Verificado")
         if rol: await self.opener.add_roles(rol)
-        await it.response.send_message(f"✅ {self.opener.mention} aprobado.", ephemeral=False)
+        await it.response.send_message(f"✅ {self.opener.mention} aprobado por {it.user.mention}.")
         await asyncio.sleep(3); await it.channel.delete()
 
-    @discord.ui.button(label="Denegar", style=discord.ButtonStyle.red, custom_id="den_v4", emoji="❌")
+    @discord.ui.button(label="Denegar", style=discord.ButtonStyle.red, custom_id="den_final", emoji="❌")
     async def den(self, it, b):
+        if it.user.id == self.opener.id:
+            return await it.response.send_message("❌ Solo el Staff puede denegar esta solicitud.", ephemeral=True)
+
         rol = discord.utils.get(it.guild.roles, name="expulsado")
         if rol: await self.opener.add_roles(rol)
-        await it.response.send_message(f"❌ {self.opener.mention} denegado.", ephemeral=False)
+        await it.response.send_message(f"❌ {self.opener.mention} denegado por {it.user.mention}.")
         await asyncio.sleep(3); await it.channel.delete()
 
-    @discord.ui.button(label="Cerrar", style=discord.ButtonStyle.grey, custom_id="cls_v4", emoji="🔒")
+    @discord.ui.button(label="Cerrar", style=discord.ButtonStyle.grey, custom_id="cls_final", emoji="🔒")
     async def cl(self, it, b):
+        # El botón de cerrar sí lo puede usar cualquiera
         await it.channel.delete()
 
-# --- FORMULARIO (MODAL) ---
+# --- FORMULARIO Y TICKET ---
 class TicketModal(Modal, title="Formulario de Verificación"):
-    # Aquí definimos la pregunta
-    respuesta = TextInput(
-        label="¿Cómo nos conociste / Quién te invitó?", 
-        placeholder="Escribe tu respuesta aquí...",
-        style=discord.TextStyle.long,
-        required=True
-    )
+    respuesta = TextInput(label="¿Cómo nos conociste?", style=discord.TextStyle.long, required=True)
 
     async def on_submit(self, it: discord.Interaction):
         overwrites = {
@@ -68,22 +71,19 @@ class TicketModal(Modal, title="Formulario de Verificación"):
         }
         chan = await it.guild.create_text_channel(f"tkt-{it.user.name}", overwrites=overwrites)
         
-        # AQUÍ ESTÁ EL CAMBIO: Creamos un Embed que incluye la respuesta del usuario
+        # EL EMBED AHORA SÍ MUESTRA LA RESPUESTA
         embed = discord.Embed(
-            title="Nueva Solicitud de Verificación", 
-            description=f"**Usuario:** {it.user.mention}\n\n**Respuesta del formulario:**\n> {self.respuesta.value}", 
+            title="Nueva Solicitud", 
+            description=f"**Usuario:** {it.user.mention}\n**Respuesta:** {self.respuesta.value}", 
             color=discord.Color.blue()
         )
-        embed.set_footer(text=f"ID del usuario: {it.user.id}")
-        
         await chan.send(embed=embed, view=GestionTicketView(it.user))
-        await it.response.send_message(f"✅ Tu ticket ha sido creado en {chan.mention}", ephemeral=True)
+        await it.response.send_message(f"✅ Ticket creado en {chan.mention}", ephemeral=True)
 
 class TicketView(View):
     def __init__(self): super().__init__(timeout=None)
-    @discord.ui.button(label="🎫 Crear Ticket", style=discord.ButtonStyle.blurple, custom_id="main_v4")
+    @discord.ui.button(label="🎫 Crear Ticket", style=discord.ButtonStyle.blurple, custom_id="main_final")
     async def b(self, it, bt):
-        # Llamamos al Modal que definimos arriba
         await it.response.send_modal(TicketModal())
 
 @bot.event
@@ -96,12 +96,12 @@ async def on_message(msg):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def enviarticket(ctx):
-    await ctx.send("Presiona el botón para iniciar:", view=TicketView())
+    await ctx.send("Inicia tu verificación aquí:", view=TicketView())
 
 @bot.event
 async def on_ready():
     bot.add_view(TicketView())
-    print(f"✅ Bot V4 Listo")
+    print("✅ Bot Final con Seguridad de ID Activa")
 
 if __name__ == "__main__":
     keep_alive()
