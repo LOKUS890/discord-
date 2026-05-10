@@ -83,6 +83,11 @@ async def on_ready():
     if not hasattr(bot, 'persistent_views_added'):
         bot.add_view(TicketView())
         setattr(bot, 'persistent_views_added', True)
+        async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        print(f"❌ Comando no encontrado: {ctx.message.content}")
+    else:
+        print(f"⚠️ Error detectado: {error}")
 
 # --- COMANDOS ---
 @bot.command()
